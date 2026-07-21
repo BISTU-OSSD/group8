@@ -1,0 +1,16 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install flask pytest
+      - run: echo "[]" > memos.json
+      - run: pytest tests/ -v
+      - run: python app.py & sleep 5 && curl http://localhost:5000
