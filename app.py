@@ -124,3 +124,30 @@ if __name__ == "__main__":
     import webbrowser
     webbrowser.open("http://127.0.0.1:5000/")
     app.run(debug=False)
+
+# 获取所有备忘录
+@app.route('/api/memos', methods=['GET'])
+def get_memos():
+    return jsonify(memos)
+
+# 添加备忘录
+@app.route('/api/memo', methods=['POST'])
+def add_memo():
+    data = request.get_json()
+    content = data.get('content', '').strip()
+    if not content:
+        return jsonify({'error': '内容不能为空'}), 400
+    memo = {'id': len(memos) + 1, 'content': content}
+    memos.append(memo)
+    return jsonify(memo), 200
+
+#test
+# 删除备忘录
+@app.route('/api/memo/<int:memo_id>', methods=['DELETE'])
+def delete_memo(memo_id):
+    global memos
+    for memo in memos:
+        if memo['id'] == memo_id:
+            memos.remove(memo)
+            return jsonify({'success': True}), 200
+    return jsonify({'error': '备忘录不存在'}), 404
