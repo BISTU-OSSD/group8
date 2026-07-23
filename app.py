@@ -112,6 +112,7 @@ def index():
     </html>
     """, memos=memos)
 
+#test
 @app.route("/delete/<int:index>", methods=["POST"])
 def delete(index):
     memos = load_memos()
@@ -119,6 +120,31 @@ def delete(index):
         memos.pop(index)
         save_memos(memos)
     return redirect("/")
+
+@app.route('/api/memos', methods=['GET'])
+def api_get_memos():
+    return json.dumps(load_memos(), ensure_ascii=False)
+
+@app.route('/api/memo', methods=['POST'])
+def api_add_memo():
+    data = request.get_json()
+    if not data or not data.get('content', '').strip():
+        return json.dumps({'error': '内容不能为空'}), 400
+    memos = load_memos()
+    new_id = max([m.get('id', 0) for m in memos], default=0) + 1
+    memos.append({'id': new_id, 'content': data['content'].strip()})
+    save_memos(memos)
+    return json.dumps({'success': True, 'id': new_id}), 200
+
+@app.route('/api/memo/<int:memo_id>', methods=['DELETE'])
+def api_delete_memo(memo_id):
+    memos = load_memos()
+    for i, m in enumerate(memos):
+        if m.get('id') == memo_id:
+            memos.pop(i)
+            save_memos(memos)
+            return json.dumps({'success': True}), 200
+    return json.dumps({'error': '备忘录不存在'}), 404
 
 if __name__ == "__main__":
     import webbrowser
