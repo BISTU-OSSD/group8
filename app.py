@@ -112,13 +112,30 @@ def index():
     </html>
     """, memos=memos)
 
-@app.route("/delete/<int:index>", methods=["POST"])
-def delete(index):
+@app.route('/api/memos', methods=['GET'])
+def api_get_memos():
+    return json.dumps(load_memos(), ensure_ascii=False), 200, {'Content-Type': 'application/json'}
+
+@app.route('/api/memo', methods=['POST'])
+def api_add_memo():
+    data = request.get_json()
+    if not data or not data.get('content', '').strip():
+        return json.dumps({'error': '内容不能为空'}), 400, {'Content-Type': 'application/json'}
     memos = load_memos()
-    if 0 <= index < len(memos):
-        memos.pop(index)
-        save_memos(memos)
-    return redirect("/")
+    new_id = max([m.get('id', 0) for m in memos], default=0) + 1
+    memos.append({'id': new_id, 'content': data['content'].strip()})
+    save_memos(memos)
+    return json.dumps({'success': True, 'id': new_id}), 200, {'Content-Type': 'application/json'}
+
+@app.route('/api/memo/<int:memo_id>', methods=['DELETE'])
+def api_delete_memo(memo_id):
+    memos = load_memos()
+    for i, m in enumerate(memos):
+        if m.get('id') == memo_id:
+            memos.pop(i)
+            save_memos(memos)
+            return json.dumps({'success': True}), 200, {'Content-Type': 'application/json'}
+    return json.dumps({'error': '备忘录不存在'}), 404, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
     import webbrowser
